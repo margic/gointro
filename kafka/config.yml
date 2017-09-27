@@ -1,0 +1,7 @@
+logging:
+  level: DEBUG
+kafka:
+  broker: localhost:9092
+  topic: tmgo
+  group: tmgo1
+  message: '{"name":"Paul"}'
