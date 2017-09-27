@@ -1,4 +1,4 @@
-package kafka
+package tmkafka
 
 import (
 	log "github.com/Sirupsen/logrus"

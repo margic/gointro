@@ -17,7 +17,7 @@ package cmd
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	tmkafka "github.com/margic/gointro/kafka/kafka"
+	tmkafka "github.com/margic/gointro/kafka/tmkafka"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
