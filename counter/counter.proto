@@ -1,0 +1,14 @@
+syntax = "proto3";
+package protos;
+
+service EventCount {
+    rpc Count (EventIn) returns (Empty);
+  }
+
+message EventIn {
+  string content = 1;
+}
+
+message Empty {
+    // is really empty
+}
