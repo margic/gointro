@@ -22,6 +22,8 @@ var sendCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(sendCmd)
 
+	sendCmd.Flags().StringP("message", "m", "Default Test Message", "message to send to the topic override default in kafka.message")
+	viper.BindPFlag("kafka.message", sendCmd.Flags().Lookup("message"))
 }
 
 func send() {
@@ -42,7 +44,7 @@ func send() {
 	}
 
 	msg := &tmkafka.StringMessage{
-		Value: "TEST",
+		Value: viper.GetString("kafka.message"),
 	}
 	err = producer.Send(msg)
 	if err != nil {

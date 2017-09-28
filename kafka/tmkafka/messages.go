@@ -28,3 +28,11 @@ func (s *StringMessage) Length() int {
 	}
 	return s.lgth
 }
+
+// StringMessageDecoder is a decoder func that can be used as a consumer decode func
+func StringMessageDecoder(encoded []byte) interface{} {
+	msg := StringMessage{
+		Value: string(encoded),
+	}
+	return msg
+}

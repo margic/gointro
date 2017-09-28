@@ -13,5 +13,4 @@
 *.out
 
 kafka/kafka
-
-kafka/build
+simpleserver/server

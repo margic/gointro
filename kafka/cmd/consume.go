@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	tmkafka "github.com/margic/gointro/kafka/tmkafka"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -26,18 +26,17 @@ func consume() {
 	log.WithField("kafkaConfig", viper.Get("kafka")).Debug("config")
 	handleTerm(cleanup)
 
-	kcfg := &kafka.ConfigMap{
-		"bootstrap.servers":               viper.GetString("kafka.broker"),
-		"group.id":                        viper.GetString("kafka.group"),
-		"session.timeout.ms":              6000,
-		"go.events.channel.enable":        true,
-		"go.application.rebalance.enable": true,
-		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
+	config := sarama.NewConfig()
+
+	cConfig := tmkafka.ConsumerConfig{
+		BrokerList:     viper.GetStringSlice("kafka.broker"),
+		Config:         config,
+		MessageDecoder: tmkafka.StringMessageDecoder,
 	}
 
-	cons, err := tmkafka.NewConsumer(kcfg)
+	cons, err := tmkafka.NewConsumer(cConfig)
 	if err != nil {
-		log.WithError(err).Error("error creating kafka consumer")
+		log.WithError(err).Error("ConsumerError")
 	}
 	consumer = cons
 	consumer.Start()

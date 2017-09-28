@@ -2,6 +2,10 @@ logging:
   level: DEBUG
 kafka:
   broker: 192.168.1.100:9092
+  partitions: all
   topic: tmgo
   group: tmgo1
+  initialOffset: oldest # or newest
   message: '{"name":"Paul"}'
+  consumer:
+    bufferSize: 32

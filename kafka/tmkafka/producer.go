@@ -38,7 +38,7 @@ func NewProducer(config ProducerConfig) (*Producer, error) {
 func (p *Producer) Send(msg *StringMessage) error {
 	pmsg := &sarama.ProducerMessage{
 		Value: msg,
-		Topic: viper.GetString("kafka.topic"),
+		Topic: viper.GetString("kafka.topic"), // oopsy no viper here, lazy
 	}
 
 	partition, offset, err := p.MessageProducer.SendMessage(pmsg)
