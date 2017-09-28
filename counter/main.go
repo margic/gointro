@@ -7,7 +7,10 @@ import (
 
 	"golang.org/x/net/context"
 
+	"sync/atomic"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/buger/goterm"
 	"github.com/margic/gointro/counter/protos"
 	"google.golang.org/grpc"
 )
@@ -34,10 +37,18 @@ func main() {
 
 // CounterServer grpc server implementation
 type CounterServer struct {
+	count uint64
 }
 
 // Count counts events
 func (cs *CounterServer) Count(ctx context.Context, event *protos.EventIn) (*protos.Empty, error) {
-	log.WithField("content", event.Content).Debug("Received")
+	atomic.AddUint64(&cs.count, 1)
+
+	goterm.Clear()
+	goterm.MoveCursor(1, 1)
+	goterm.Println(cs.count)
+	goterm.Flush()
+	//fmt.Printf("\x0cCount %d", cs.count)
+	//log.WithField("content", event.Content).Debug("Received")
 	return &protos.Empty{}, nil
 }

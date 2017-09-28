@@ -9,3 +9,5 @@ kafka:
   message: '{"name":"Paul"}'
   consumer:
     bufferSize: 128
+counter:
+  address: localhost:8079

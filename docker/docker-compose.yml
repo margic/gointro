@@ -1,13 +1,17 @@
 version: '3'
 services:
-  rest:
+  consumer:
     image: pcrofts/tmkafka
+    command: consume --debug
+    links:
+      - counter
+      - kafka
+  counter:
+    image: pcrofts/tmcounter
   kafka:
     image: spotify/kafka
     ports:
     - "9092:9092"
     - "2181:2181"
-  redis:
-    image: redis:alpine
 volumes:
   logvolume01: {}

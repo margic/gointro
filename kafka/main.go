@@ -14,7 +14,9 @@
 
 package main
 
-import "github.com/margic/gointro/kafka/cmd"
+import (
+	"github.com/margic/gointro/kafka/cmd"
+)
 
 func main() {
 	cmd.Execute()

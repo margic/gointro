@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
+	"github.com/margic/gointro/kafka/counter"
 	tmkafka "github.com/margic/gointro/kafka/tmkafka"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,21 +29,28 @@ var messages chan interface{}
 
 func consume() {
 	log.Info("consume called")
+	log.WithField("env", fmt.Sprintf("%v", os.Environ())).Info("environment")
 	log.WithField("kafkaConfig", viper.Get("kafka")).Debug("config")
 	handleTerm(cleanup)
 
 	bufSize := viper.GetInt("kafka.consumer.bufferSize")
 	messages = make(chan interface{}, bufSize)
+	countClient, err := counter.NewClient()
+	if err != nil {
+		log.WithError(err).Error("error creating counter client")
+	}
 
-	go func(msgChannel chan interface{}) {
+	go func(msgChannel chan interface{}, counter *counter.Client) {
 		for message := range messages {
 			log.WithFields(log.Fields{
 				"messageType":    fmt.Sprintf("%T", message),
 				"messageContent": fmt.Sprintf("%v", message),
 			}).Debug("consumed")
+			decoded := message.(tmkafka.StringMessage)
+			counter.CountEvent(decoded.Value)
 		}
 		log.Info("finished reading messages")
-	}(messages)
+	}(messages, countClient)
 
 	config := sarama.NewConfig()
 	config.Consumer.Fetch.Min = 4096

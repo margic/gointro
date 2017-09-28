@@ -3,4 +3,4 @@ build:
 	docker build --tag pcrofts/tmcounter .
 
 generate:
-	protoc --go_out=./proto plugins=grpc,import_path=counter counter.proto
+	protoc -I . counter.proto --go_out=plugins=grpc:protos
