@@ -2,7 +2,6 @@ package tmkafka
 
 import (
 	log "github.com/Sirupsen/logrus"
-
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 

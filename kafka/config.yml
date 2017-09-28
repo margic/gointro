@@ -1,7 +1,7 @@
 logging:
   level: DEBUG
 kafka:
-  broker: 10.40.184.89:9092
+  broker: 192.168.1.100:9092
   topic: tmgo
   group: tmgo1
   message: '{"name":"Paul"}'
