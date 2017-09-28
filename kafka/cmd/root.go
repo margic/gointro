@@ -70,7 +70,7 @@ func handleTerm(cleanup func()) {
 		for sig := range c {
 			log.Infof("captured %v, stopping application", sig)
 			cleanup()
-			os.Exit(1)
+			os.Exit(0)
 		}
 	}()
 }

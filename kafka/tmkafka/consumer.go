@@ -22,32 +22,38 @@ var (
 type Consumer struct {
 	MessageConsumer sarama.Consumer
 	MessageDecoder  func([]byte) interface{}
+	ReceiverChannel chan interface{}
 }
 
 // ConsumerConfig contains the config
 type ConsumerConfig struct {
-	BrokerList     []string
-	Config         *sarama.Config
-	MessageDecoder func([]byte) interface{}
+	BrokerList      []string
+	SaramaConfig    *sarama.Config
+	MessageDecoder  func([]byte) interface{}
+	ConsumerChannel chan interface{}
 }
 
 // NewConsumer create a new consumer to read from topic
 func NewConsumer(config ConsumerConfig) (*Consumer, error) {
 	log.Debug("new consumer")
-	c, err := sarama.NewConsumer(config.BrokerList, config.Config)
+	if config.MessageDecoder == nil || config.ConsumerChannel == nil {
+		return nil, errors.New("MessageDecoder and ReceiverChannel must be provided")
+	}
+	c, err := sarama.NewConsumer(config.BrokerList, config.SaramaConfig)
 	if err != nil {
-		log.WithError(err).Error("ConsumerError")
+		log.WithError(err).Error("error creating new consumer")
 	}
 	mc := &Consumer{
 		MessageConsumer: c,
 		MessageDecoder:  config.MessageDecoder,
+		ReceiverChannel: config.ConsumerChannel,
 	}
 	return mc, nil
 }
 
 // Start start consuming from topic
 func (c *Consumer) Start() error {
-	log.Info("ConsumerStarting")
+	log.Info("starting consumer")
 	t := viper.GetString("kafka.topic")
 	offset := viper.GetString("kafka.initialOffset")
 	var initialOffset int64
@@ -60,10 +66,10 @@ func (c *Consumer) Start() error {
 		return errors.New("kafka.initiaOffset should be `oldest` or `newest`")
 	}
 
-	log.WithField("topic", t).Info("ConsumerSettings")
+	log.WithField("topic", t).Info("consumer topic")
 	partitionList, err := getPartitions(c.MessageConsumer)
 	if err != nil {
-		log.WithError(err).Error("ConsumerError")
+		log.WithError(err).Error("error getting kafka partitions")
 	}
 
 	var (
@@ -72,18 +78,18 @@ func (c *Consumer) Start() error {
 	)
 
 	for _, partition := range partitionList {
-		log.WithFields(log.Fields{
-			"partition": partition,
-			"state":     "starting",
-		}).Info("ConsumerState")
+		log.WithField("partition", partition).Info("start consuming")
 		pc, err := c.MessageConsumer.ConsumePartition(t, partition, initialOffset)
 		if err != nil {
 			return err
 		}
 
 		go func(pc sarama.PartitionConsumer) {
+			// will wait for a message on closing or until closing is closed
 			<-closing
-			pc.AsyncClose()
+			if err := pc.Close(); err != nil {
+				log.WithError(err).Error("error closing consumer")
+			}
 		}(pc)
 
 		wg.Add(1)
@@ -95,16 +101,15 @@ func (c *Consumer) Start() error {
 					"partition": message.Partition,
 					"topic":     message.Topic,
 					"value":     fmt.Sprintf("%s", message.Value),
-				}).Debug("MessageReceived")
+				}).Debug("received")
 				decoded := c.MessageDecoder(message.Value)
-				log.WithField("message", fmt.Sprintf("%v", decoded)).Debug("MessageDecoded")
+				c.ReceiverChannel <- decoded
 			}
 		}(pc)
 	}
 
 	wg.Wait()
 	log.WithField("state", "done consuming").Info("ConsumerState")
-	//close(messages)
 
 	if err := c.MessageConsumer.Close(); err != nil {
 		log.WithError(err).Error("ConsumerError")
@@ -139,50 +144,8 @@ func getPartitions(c sarama.Consumer) ([]int32, error) {
 }
 
 // Stop stop consuming
-func (c *Consumer) Stop() {}
-
-// // NewConsumer create a new Consumer type with provided kafka config
-// func NewConsumer(cfg *kafka.ConfigMap) (*Consumer, error) {
-// 	c, err := kafka.NewConsumer(cfg)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &Consumer{
-// 		kc:  c,
-// 		run: true,
-// 	}, nil
-// }
-
-// // Start starts the consumer
-// func (c *Consumer) Start() {
-// 	for c.run {
-// 		select {
-// 		case ev := <-c.kc.Events():
-
-// 			switch e := ev.(type) {
-// 			case kafka.AssignedPartitions:
-// 				log.Infof("%% %v\n", e)
-// 				c.kc.Assign(e.Partitions)
-// 			case kafka.RevokedPartitions:
-// 				log.Infof("%% %v\n", e)
-// 				c.kc.Unassign()
-// 			case *kafka.Message:
-// 				log.Infof("%% Message on %s:\n%s\n",
-// 					e.TopicPartition, string(e.Value))
-// 			case kafka.PartitionEOF:
-// 				log.Infof("%% Reached %v\n", e)
-// 			case kafka.Error:
-// 				log.Infof("%% Error: %v\n", e)
-// 				c.run = false
-// 			}
-// 		}
-// 	}
-// }
-
-// // Stop stops the consumer
-// func (c *Consumer) Stop() {
-// 	// set run to false and the loop in start will end
-// 	log.Info("Stopping app")
-// 	c.run = false
-// 	c.kc.Close()
-// }
+func (c *Consumer) Stop() {
+	log.Info("consumer stopping")
+	close(closing)
+	log.Info("consumer stopped")
+}
