@@ -13,6 +13,7 @@ import (
 )
 
 var cfgFile string
+var debug bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -33,6 +34,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yml)")
+	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debug output")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -58,6 +60,10 @@ func initConfig() {
 			log.SetLevel(l)
 		} else {
 			log.WithError(err).Error("error parsing logging level")
+		}
+		// if the flag is set debug anyway
+		if debug && l != log.DebugLevel {
+			log.SetLevel(log.DebugLevel)
 		}
 		log.Debug("debug logging enabled")
 	}

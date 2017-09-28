@@ -44,6 +44,7 @@ func consume() {
 	}(messages)
 
 	config := sarama.NewConfig()
+	config.Consumer.Fetch.Min = 4096
 
 	cConfig := tmkafka.ConsumerConfig{
 		BrokerList:      viper.GetStringSlice("kafka.broker"),

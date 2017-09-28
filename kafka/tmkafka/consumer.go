@@ -2,7 +2,6 @@ package tmkafka
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -96,12 +95,6 @@ func (c *Consumer) Start() error {
 		go func(pc sarama.PartitionConsumer) {
 			defer wg.Done()
 			for message := range pc.Messages() {
-				log.WithFields(log.Fields{
-					"offset":    message.Offset,
-					"partition": message.Partition,
-					"topic":     message.Topic,
-					"value":     fmt.Sprintf("%s", message.Value),
-				}).Debug("received")
 				decoded := c.MessageDecoder(message.Value)
 				c.ReceiverChannel <- decoded
 			}

@@ -15,7 +15,12 @@ var sendCmd = &cobra.Command{
 	Long: `Will send a default message from the config.yml file or 
 		a custom message if the --message flag is used.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		send()
+		producer, err := createProducer()
+		if err != nil {
+			log.WithError(err).Error("error creatint producer")
+		}
+		defer producer.MessageProducer.Close()
+		send(producer)
 	},
 }
 
@@ -26,8 +31,8 @@ func init() {
 	viper.BindPFlag("kafka.message", sendCmd.Flags().Lookup("message"))
 }
 
-func send() {
-	log.Debug("send called")
+func createProducer() (*tmkafka.Producer, error) {
+	log.Debug("creating producer")
 	config := sarama.NewConfig()
 
 	config.Producer.Return.Successes = true
@@ -40,13 +45,17 @@ func send() {
 
 	producer, err := tmkafka.NewProducer(pConfig)
 	if err != nil {
-		log.WithError(err).Error("ProducerError")
+		return nil, err
 	}
+	return producer, nil
+}
 
+func send(producer *tmkafka.Producer) {
+	log.Debug("send called")
 	msg := &tmkafka.StringMessage{
 		Value: viper.GetString("kafka.message"),
 	}
-	err = producer.Send(msg)
+	err := producer.Send(msg)
 	if err != nil {
 		log.WithError(err).Error("SendError")
 	}

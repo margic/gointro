@@ -1,5 +1,5 @@
 logging:
-  level: DEBUG
+  level: INFO
 kafka:
   broker: 192.168.1.100:9092
   partitions: all
@@ -8,4 +8,4 @@ kafka:
   initialOffset: oldest # or newest
   message: '{"name":"Paul"}'
   consumer:
-    bufferSize: 32
+    bufferSize: 128
