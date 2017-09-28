@@ -1,7 +1,7 @@
 logging:
   level: INFO
 kafka:
-  broker: 192.168.1.100:9092
+  broker: 10.40.184.70:9092
   partitions: all
   topic: tmgo
   group: tmgo1
@@ -10,4 +10,4 @@ kafka:
   consumer:
     bufferSize: 128
 counter:
-  address: localhost:8079
+  address: 10.40.184.70:8079

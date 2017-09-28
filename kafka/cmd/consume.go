@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Shopify/sarama"
 	log "github.com/Sirupsen/logrus"
@@ -53,7 +54,7 @@ func consume() {
 	}(messages, countClient)
 
 	config := sarama.NewConfig()
-	config.Consumer.Fetch.Min = 4096
+	config.Net.DialTimeout = 10 * time.Second
 
 	cConfig := tmkafka.ConsumerConfig{
 		BrokerList:      viper.GetStringSlice("kafka.broker"),

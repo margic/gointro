@@ -6,12 +6,18 @@ services:
     links:
       - counter
       - kafka
+    depends_on:
+      - "counter"
+      - "kafka"
   counter:
     image: pcrofts/tmcounter
   kafka:
     image: spotify/kafka
+    environment:
+      ADVERTISED_HOST: 10.40.184.70
+      ADVERTISED_PORT: 9092
     ports:
-    - "9092:9092"
-    - "2181:2181"
+      - "9092:9092"
+      - "2181:2181"
 volumes:
   logvolume01: {}
